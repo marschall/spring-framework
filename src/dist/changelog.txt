@@ -6,8 +6,8 @@ http://www.springsource.org
 Changes in version 3.2 M1
 -------------------------------------
 
-* add Servlet 3.0 based async support
-* upgraded to AspectJ 1.6.12, JUnit 4.10, TestNG 6.5.2
+* add Servlet 3.0-based async support
+* upgrade to AspectJ 1.6.12, JUnit 4.10, TestNG 6.5.2
 * add HttpMessageConverter and View types compatible with Jackson 2.0
 * better handling on failure to parse invalid 'Content-Type' or 'Accept' headers
 * handle a controller method's return value based on the actual returned value (vs declared type)
@@ -27,6 +27,15 @@ Changes in version 3.2 M1
 * add CompositeRequestCondition for use with multiple custom request mapping conditions
 * add ability to configure custom MessageCodesResolver through the MVC Java config
 * add option in MappingJacksonJsonView for setting the Content-Length header
+* decode path variables when url decoding is turned off in AbstractHandlerMapping
+* add required flag to @RequestBody annotation
+* support executor qualification with @Async#value (SPR-6847)
+* add convenient WebAppInitializer base classes (SPR-9300)
+* support initial delay attribute for scheduled tasks (SPR-7022)
+* cache by-type lookups in DefaultListableBeanFactory (SPR-6870)
+* merge rather than add URI vars to data binding values (SPR-9349)
+* Support not (!) operator for profile selection (SPR-8728)
+
 
 Changes in version 3.1.1 (2012-02-16)
 -------------------------------------
