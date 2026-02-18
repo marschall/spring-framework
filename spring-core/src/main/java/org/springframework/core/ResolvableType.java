@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.SerializableTypeWrapper.FieldTypeProvider;
@@ -97,6 +98,15 @@ public class ResolvableType implements Serializable {
 
 	private static final ConcurrentReferenceHashMap<ResolvableType, ResolvableType> cache =
 			new ConcurrentReferenceHashMap<>(256);
+
+	private static final ClassValue<ResolvableType> CLASS_CACHE = new ClassValue<>() {
+		@Override
+		protected ResolvableType computeValue(@NonNull Class<?> clazz) {
+			return new ResolvableType(clazz);
+		}
+	};
+
+	private static final ResolvableType OBJECT = new ResolvableType(null);
 
 
 	/**
@@ -1094,7 +1104,10 @@ public class ResolvableType implements Serializable {
 	 * @see #forClassWithGenerics(Class, Class...)
 	 */
 	public static ResolvableType forClass(@Nullable Class<?> clazz) {
-		return new ResolvableType(clazz);
+		if (clazz == null) {
+			return OBJECT;
+		}
+		return CLASS_CACHE.get(clazz);
 	}
 
 	/**
@@ -1529,7 +1542,10 @@ public class ResolvableType implements Serializable {
 
 		// For simple Class references, build the wrapper right away -
 		// no expensive resolution necessary, so not worth caching...
-		if (type instanceof Class) {
+		if (type instanceof Class<?> clazz) {
+			if (typeProvider == null && variableResolver == null) {
+				return CLASS_CACHE.get(clazz);
+			}
 			return new ResolvableType(type, null, typeProvider, variableResolver);
 		}
 
