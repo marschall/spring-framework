@@ -98,10 +98,13 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 
 	private volatile @Nullable String listenerId;
 
+	private volatile @Nullable Object targetBean;
+
 	private @Nullable ApplicationContext applicationContext;
 
 	private @Nullable EventExpressionEvaluator evaluator;
 
+	private boolean isSingleton;
 
 	/**
 	 * Construct a new ApplicationListenerMethodAdapter.
@@ -162,6 +165,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	void init(ApplicationContext applicationContext, @Nullable EventExpressionEvaluator evaluator) {
 		this.applicationContext = applicationContext;
 		this.evaluator = evaluator;
+		this.isSingleton = this.applicationContext.isSingleton(this.beanName);
 	}
 
 
@@ -399,7 +403,15 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	 */
 	protected Object getTargetBean() {
 		Assert.notNull(this.applicationContext, "ApplicationContext must not be null");
-		return this.applicationContext.getBean(this.beanName);
+		if (this.isSingleton) {
+			if (this.targetBean == null) {
+				this.targetBean = this.applicationContext.getBean(this.beanName);
+			}
+			return this.targetBean;
+		}
+		else {
+			return this.applicationContext.getBean(this.beanName);
+		}
 	}
 
 	/**

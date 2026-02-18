@@ -408,10 +408,21 @@ public abstract class AbstractApplicationEventMulticaster
 
 		private final @Nullable Class<?> sourceType;
 
+		// regularly called by ConcurrentHashMap, therefore cached
+		private final int hashCode;
+
 		public ListenerCacheKey(ResolvableType eventType, @Nullable Class<?> sourceType) {
 			Assert.notNull(eventType, "Event type must not be null");
 			this.eventType = eventType;
 			this.sourceType = sourceType;
+			this.hashCode = hashCode(this.eventType, this.sourceType);
+		}
+
+		private static int hashCode(ResolvableType eventType, @Nullable Class<?> sourceType) {
+			int result = 1;
+			result = 31 * result + eventType.hashCode();
+			result = 31 * result + Objects.hashCode(sourceType);
+			return result;
 		}
 
 		@Override
@@ -423,7 +434,7 @@ public abstract class AbstractApplicationEventMulticaster
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(this.eventType, this.sourceType);
+			return this.hashCode;
 		}
 
 		@Override
@@ -465,6 +476,20 @@ public abstract class AbstractApplicationEventMulticaster
 			if (applicationListeners == null || applicationListenerBeans == null) {
 				// Not fully populated yet
 				return null;
+			}
+			if (applicationListeners.size() == 1 && applicationListenerBeans.isEmpty()) {
+				return List.of(applicationListeners.iterator().next());
+			}
+			if (applicationListeners.isEmpty() && applicationListenerBeans.size() == 1) {
+				try {
+					String listenerBeanName = applicationListenerBeans.iterator().next();
+					ApplicationListener<?> listener = getBeanFactory().getBean(listenerBeanName, ApplicationListener.class);
+					return List.of(listener);
+				}
+				catch (NoSuchBeanDefinitionException ex) {
+					// Singleton listener instance (without backing bean definition) disappeared -
+					// probably in the middle of the destruction phase
+				}
 			}
 
 			List<ApplicationListener<?>> allListeners = new ArrayList<>(
